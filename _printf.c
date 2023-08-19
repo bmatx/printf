@@ -1,66 +1,50 @@
 #include "main.h"
 
-void print_buffer(char buffer[], int *buff_ind);
-
 /**
- * _printf - Printf function
- * @format: format.
- * Return: Printed chars.
+ * _printf - prints formatted data to stdout
+ * @format: string that contains the format to print
+ * Return: number of characters written
  */
-int _printf(const char *format, ...)
+int _printf(char *format, ...)
 {
-	int a, printed = 0, printed_chars = 0;
-	int flags, width, precision, size, buff_ind = 0;
+	int printed = 0, (*structype)(char *, va_list);
+	char q[3];
 	va_list list;
-	char buffer[BUFF_SIZE];
 
 	if (format == NULL)
 		return (-1);
-
+	q[2] = '\0';
 	va_start(list, format);
-
-	for (a = 0; format && format[a] != '\0'; a++)
+	_putchar(-1);
+	while (format[0])
 	{
-		if (format[a] != '%')
+		if (format[0] == '%')
 		{
-			buffer[buff_ind++] = format[a];
-			if (buff_ind == BUFF_SIZE)
-				print_buffer(buffer, &buff_ind);
-			/* write(1, &format[i], 1);*/
-			printed_chars++;
+			structype = driver(format);
+			if (structype)
+			{
+				q[0] = '%';
+				q[1] = format[1];
+				printed += structype(q, list);
+			}
+			else if (format[1] != '\0')
+			{
+				printed += _putchar('%');
+				printed += _putchar(format[1]);
+			}
+			else
+			{
+				printed += _putchar('%');
+				break;
+			}
+			format += 2;
 		}
 		else
 		{
-			print_buffer(buffer, &buff_ind);
-			flags = get_flags(format, &a);
-			width = get_width(format, &a, list);
-			precision = get_precision(format, &a, list);
-			size = get_size(format, &a);
-			++a;
-			printed = handle_print(format, &a, list, buffer,
-				flags, width, precision, size);
-			if (printed == -1)
-				return (-1);
-			printed_chars += printed;
+			printed += _putchar(format[0]);
+			format++;
 		}
 	}
-
-	print_buffer(buffer, &buff_ind);
-
-	va_end(list);
-
-	return (printed_chars);
-}
-
-/**
- * print_buffer - Prints the contents of the buffer if it exist
- * @buffer: Array of chars
- * @buff_ind: Index at which to add next char, represents the length.
- */
-void print_buffer(char buffer[], int *buff_ind)
-{
-	if (*buff_ind > 0)
-		write(1, &buffer[0], *buff_ind);
-
-	*buff_ind = 0;
+	_putchar(-2);
+	return (printed);
 }
